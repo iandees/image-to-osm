@@ -10,7 +10,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            margin-top: 20px;
             background-color: #f8f9fa;
         }
         #photo {
@@ -57,6 +57,7 @@
         reader.onload = function(e) {
             const dataURL = e.target.result;
             photo.setAttribute('src', dataURL);
+            photo.style.display = 'block';
 
             fetch('/upload', {
                 method: 'POST',

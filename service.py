@@ -34,6 +34,8 @@ def upload_image():
     except PIL.UnidentifiedImageError as e:
         return jsonify({"error": f"Don't know how to read that image. {str(e)}"}), 400
 
+    # Resize the image to a maximum dimension of 1024
+    # A smaller image is fewer tokens paid to OpenAI and faster processing.
     max_dimension = 1024
     image.thumbnail((max_dimension, max_dimension))
 
