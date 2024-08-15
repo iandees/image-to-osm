@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to OpenStreetMap Tags</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f9fa;
+        }
+        #photo {
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #capture {
+            margin-top: 20px;
+        }
+        #tagsOutput {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+<div class="container text-center">
+    <h1 class="mb-4">Extract OpenStreetMap tags from an Image</h1>
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8">
+            <input type="file" accept="image/*;capture=camera" id="capture" class="btn btn-primary btn-block">
+            <img id="photo" class="img-fluid" alt="Captured Image" style="display:none;">
+            <div id="result" class="mt-4"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS, Popper.js, and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    const captureInput = document.getElementById('capture');
+    const photo = document.getElementById('photo');
+    const result = document.getElementById('result');
+
+    captureInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        // Show the spinner
+        result.innerHTML = `<div id="spinner" class="spinner-border text-primary mt-2" role="status"><span class="sr-only">Loading...</span></div><span class="mt-2">Processing image...</span>`;
+
+        reader.onload = function(e) {
+            const dataURL = e.target.result;
+            photo.setAttribute('src', dataURL);
+
+            fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: dataURL })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        const formattedTags = Object.entries(data.tags).map(([key, value]) => `${key}=${value}`).join('\n');
+                        result.innerHTML = `<h3>Tags:</h3><textarea id="tagsOutput" class="form-control" rows="5" readonly></textarea><p><strong>Warning:</strong>&nbsp;These tags are generated using a language model. Verify their accuracy before using them verbatim!</p><button id="copyButton" class="btn btn-secondary mt-2">Copy to Clipboard</button>`;
+                        const tagsOutput = document.getElementById('tagsOutput');
+                        tagsOutput.value = formattedTags;
+                        const copyButton = document.getElementById('copyButton');
+                        copyButton.addEventListener('click', function() {
+                            navigator.clipboard.writeText(tagsOutput.value).then(() => {
+                                const originalLabel = copyButton.textContent;
+                                copyButton.textContent = 'Copied!';
+                                setTimeout(() => {
+                                    copyButton.textContent = originalLabel;
+                                }, 2000);
+                            }).catch(err => {
+                                console.error('Error copying text: ', err);
+                            });
+                        });
+                    } else if (data.status === 'not_found') {
+                        result.innerHTML = `<h3>Error:</h3><p>Nothing tag-worthy found in the image.</p>`;
+                    } else if (data.error) {
+                        result.innerHTML = `<h3>Error:</h3><p>${data.error}</p>`;
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    result.innerHTML = `<h3>Error:</h3><p>There was an error processing your request.</p>`;
+                })
+                .finally(() => {
+                    // Hide the spinner
+                    spinner.style.display = 'none';
+                });
+        };
+
+        reader.readAsDataURL(file);
+    });
+</script>
+</body>
+</html>

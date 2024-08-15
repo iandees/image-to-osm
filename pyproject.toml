@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "opening-hours-extractor"
+version = "0.1.0"
+description = ""
+authors = ["Ian Dees <ian.dees@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flask = "^3.0.3"
+openai = "^1.40.6"
+pillow = "^10.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
