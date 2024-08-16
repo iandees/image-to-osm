@@ -76,7 +76,6 @@ def upload_image():
         )
 
         result = response.choices[0].message.content
-        print(result)
 
         # Read the JSON from OpenAI
         result_json_str = result.replace("```json", "").replace("```", "").strip()
