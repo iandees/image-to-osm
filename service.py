@@ -61,7 +61,7 @@ def upload_image():
                     content=[
                         ChatCompletionContentPartTextParam(
                             type="text",
-                            text="Extract OpenStreetMap tags for the storefront in the given image. If there are opening hours, return them in OpenStreetMap 'opening_hours' format. Do not include any context. Do not make up OpenStreetMap tags. If you find something with OpenStreetMap tags, set status to 'ok'. If nothing is interesting, set status to 'not_found'. Output a JSON object with keys 'status' and 'tags'. 'tags' should be a simple object with tag key and tag value.",
+                            text="Extract OpenStreetMap tags for the primary subject or storefront in the given image. If there are opening hours, return them in OpenStreetMap 'opening_hours' format. If there is a URL, visit that page and use it to help decide on tags. Only output JSON. Do not make up OpenStreetMap tags. If you find something that should have OpenStreetMap tags, set status to 'ok'. If nothing has OpenStreetMap tags, set status to 'not_found'. Output a JSON object with keys 'status' and 'tags'. 'tags' should be a simple object with tag key and tag value.",
                         ),
                         ChatCompletionContentPartImageParam(
                             type="image_url",
