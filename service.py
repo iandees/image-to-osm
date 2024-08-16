@@ -39,6 +39,10 @@ def upload_image():
     max_dimension = 1024
     image.thumbnail((max_dimension, max_dimension))
 
+    # Remove alpha channel if present
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+
     # Convert image to binary data for API request
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG")
