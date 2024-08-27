@@ -1,14 +1,13 @@
-import json
-import os
-
-import PIL
-from flask import Flask, request, jsonify, render_template
 import base64
 import io
+import json
+
+import PIL
 from PIL import Image
+from flask import Flask, request, jsonify, render_template
 from openai import OpenAI
-from openai.types.chat import ChatCompletionMessageParam, ChatCompletionUserMessageParam, \
-    ChatCompletionContentPartTextParam, ChatCompletionContentPartImageParam
+from openai.types.chat import ChatCompletionUserMessageParam, \
+    ChatCompletionContentPartTextParam, ChatCompletionContentPartImageParam, ChatCompletionSystemMessageParam
 from openai.types.chat.chat_completion_content_part_image_param import ImageURL
 
 app = Flask(__name__)
@@ -56,13 +55,18 @@ def upload_image():
         response = client.chat.completions.create(
             model="gpt-4o-mini-2024-07-18",
             messages=[
-                ChatCompletionUserMessageParam(
-                    role="user",
+                ChatCompletionSystemMessageParam(
+                    role="system",
                     content=[
                         ChatCompletionContentPartTextParam(
                             type="text",
                             text="Suggest OpenStreetMap tags for the primary subject in the given image. If there are opening hours visible in the image, return them in OpenStreetMap 'opening_hours' format. Remember: 'opening_hours' format MUST use two letter English abbreviations for days of the week. Only output JSON. Do not make up OpenStreetMap tags. If you find something that should have OpenStreetMap tags, set status to 'ok'. If nothing has OpenStreetMap tags, set status to 'not_found'. Output a JSON object with keys 'status' and 'tags'. 'tags' should be a simple object with tag key and tag value.",
                         ),
+                    ],
+                ),
+                ChatCompletionUserMessageParam(
+                    role="user",
+                    content=[
                         ChatCompletionContentPartImageParam(
                             type="image_url",
                             image_url=ImageURL(
