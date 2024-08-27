@@ -58,25 +58,54 @@
     </div>
 </div>
 
-<!-- Bootstrap JS, Popper.js, and jQuery -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
     const captureInput = document.getElementById('capture');
     const photo = document.getElementById('photo');
     const result = document.getElementById('result');
 
+    function resizeImage(file, maxDimension, callback) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxDimension) {
+                        height *= maxDimension / width;
+                        width = maxDimension;
+                    }
+                } else {
+                    if (height > maxDimension) {
+                        width *= maxDimension / height;
+                        height = maxDimension;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                callback(canvas.toDataURL('image/jpeg'));
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     captureInput.addEventListener('change', function(event) {
         const file = event.target.files[0];
-        const reader = new FileReader();
+        const maxDimension = 2048;
 
         // Show the spinner
         result.innerHTML = `<div id="spinner" class="spinner-border text-primary mt-2" role="status"><span class="sr-only">Loading...</span></div><span class="mt-2">Processing image...</span>`;
 
-        reader.onload = function(e) {
-            const dataURL = e.target.result;
-            photo.setAttribute('src', dataURL);
+        resizeImage(file, maxDimension, function(resizedImage) {
+            photo.setAttribute('src', resizedImage);
             photo.style.display = 'block';
 
             fetch('/upload', {
@@ -84,7 +113,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ image: dataURL })
+                body: JSON.stringify({ image: resizedImage })
             })
                 .then(response => response.json())
                 .then(data => {
@@ -115,13 +144,7 @@
                     console.error('Error:', error);
                     result.innerHTML = `<h3>Error:</h3><p>There was an error processing your request.</p>`;
                 })
-                .finally(() => {
-                    // Hide the spinner
-                    spinner.style.display = 'none';
-                });
-        };
-
-        reader.readAsDataURL(file);
+        });
     });
 </script>
 </body>
